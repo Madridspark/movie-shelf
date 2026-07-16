@@ -86,6 +86,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
+      hash: true,
       template: path.resolve(rootDir, 'public/index.html')
     }),
     new webpack.DefinePlugin({
