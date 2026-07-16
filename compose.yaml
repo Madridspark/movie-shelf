@@ -1,0 +1,18 @@
+services:
+  movie-shelf:
+    build:
+      context: .
+      args:
+        VITE_TMDB_ACCESS_TOKEN: ${VITE_TMDB_ACCESS_TOKEN}
+        VITE_TMDB_BASE_URL: ${VITE_TMDB_BASE_URL:-https://api.themoviedb.org/3}
+    image: movie-shelf:latest
+    container_name: movie-shelf
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
