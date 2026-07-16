@@ -162,8 +162,9 @@
   transition:
     border-color 0.24s ease,
     box-shadow 0.24s ease,
+    filter 0.24s ease,
     opacity 0.24s ease;
-  will-change: transform;
+  will-change: filter, opacity, transform;
 
   img {
     display: block;
@@ -191,6 +192,45 @@
       0 22px 44px rgba(0, 0, 0, 0.46),
       0 0 0 2px fade(@gold, 28%);
     opacity: 1;
+    animation: posterFocus 0.36s ease-out;
+  }
+}
+
+.drawing {
+  .poster {
+    pointer-events: none;
+  }
+
+  .posterInner {
+    filter: blur(1.4px) saturate(0.72);
+    opacity: 0.46;
+    transform: scale(0.96);
+    transition:
+      filter 0.18s ease,
+      opacity 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  .posterActive .posterInner {
+    filter: blur(0) saturate(1.12);
+    opacity: 1;
+    transform: translateY(-8px) scale(1.06);
+    transition:
+      filter 0.22s ease,
+      opacity 0.22s ease,
+      transform 0.22s cubic-bezier(0.2, 0.82, 0.18, 1);
+  }
+}
+
+@keyframes posterFocus {
+  0% {
+    filter: saturate(0.72);
+    transform: scale(0.96);
+  }
+
+  100% {
+    filter: saturate(1);
+    transform: scale(1);
   }
 }
 
@@ -282,6 +322,20 @@
 
     strong {
       white-space: normal;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .posterActive .posterInner {
+    animation: none;
+  }
+
+  .drawing {
+    .posterInner,
+    .posterActive .posterInner {
+      filter: none;
+      transform: none;
     }
   }
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import clsx from 'clsx';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ExternalLink, Shuffle } from 'lucide-react';
+import { ExternalLink, Search, Shuffle } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,13 +70,28 @@ export function LotteryBanner({ actionMode, movies, sourceType, variant = 'hero'
     skipSnaps: false
   });
   const isProgrammaticScrollRef = useRef(false);
+  const drawingTimerRef = useRef<number[]>([]);
   const [activeMovieId, setActiveMovieId] = useState<number | null>(candidates[0]?.id ?? null);
   const [isPaused, setIsPaused] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
   const activeIndex = candidates.findIndex((movie) => movie.id === activeMovieId);
   const activeMovie = activeIndex >= 0 ? candidates[activeIndex] : candidates[0];
   const imageUrl = getBannerImage(activeMovie);
   const isFavoriteLottery = variant === 'compact';
   const sourceLabel = getSourceLabel(sourceType);
+
+  const clearDrawingTimers = () => {
+    drawingTimerRef.current.forEach((timer) => window.clearTimeout(timer));
+    drawingTimerRef.current = [];
+  };
+
+  useEffect(
+    () => () => {
+      drawingTimerRef.current.forEach((timer) => window.clearTimeout(timer));
+      drawingTimerRef.current = [];
+    },
+    []
+  );
 
   useEffect(() => {
     if (candidates.length === 0) {
@@ -131,7 +146,7 @@ export function LotteryBanner({ actionMode, movies, sourceType, variant = 'hero'
   }, [emblaApi, visualQueue]);
 
   useEffect(() => {
-    if (candidates.length < 2 || isPaused) {
+    if (candidates.length < 2 || isPaused || isDrawing) {
       return undefined;
     }
 
@@ -147,7 +162,7 @@ export function LotteryBanner({ actionMode, movies, sourceType, variant = 'hero'
     }, 5200);
 
     return () => window.clearInterval(timer);
-  }, [candidates, isFavoriteLottery, isPaused]);
+  }, [candidates, isDrawing, isFavoriteLottery, isPaused]);
 
   const openMovieDetail = (movie: MovieSummary | undefined) => {
     if (!movie) {
@@ -158,22 +173,59 @@ export function LotteryBanner({ actionMode, movies, sourceType, variant = 'hero'
   };
 
   const handleChangeMovie = () => {
-    if (candidates.length < 2) {
+    if (candidates.length < 2 || isDrawing) {
       return;
     }
 
-    const nextIndex = getNextLotteryIndex(activeIndex, candidates.length);
+    const currentIndex = activeIndex >= 0 ? activeIndex : 0;
+    const nextIndex = getNextLotteryIndex(currentIndex, candidates.length);
+    const nextMovieId = candidates[nextIndex]?.id ?? candidates[0].id;
 
-    setActiveMovieId(candidates[nextIndex]?.id ?? candidates[0].id);
+    if (shouldReduceMotion) {
+      setActiveMovieId(nextMovieId);
+      return;
+    }
+
+    clearDrawingTimers();
+    setIsDrawing(true);
+    setIsPaused(true);
+
+    const spinSteps = Math.max(candidates.length * 2 + 3, 9);
+    let elapsed = 0;
+
+    Array.from({ length: spinSteps }).forEach((_, index) => {
+      const step = index + 1;
+      const delay = 44 + step * 18;
+      const movieId = candidates[(currentIndex + step) % candidates.length]?.id ?? nextMovieId;
+
+      elapsed += delay;
+      drawingTimerRef.current.push(
+        window.setTimeout(() => {
+          setActiveMovieId(step === spinSteps ? nextMovieId : movieId);
+        }, elapsed)
+      );
+    });
+
+    drawingTimerRef.current.push(
+      window.setTimeout(() => {
+        setActiveMovieId(nextMovieId);
+        setIsDrawing(false);
+        setIsPaused(false);
+      }, elapsed + 220)
+    );
   };
 
   const handleSelectMovie = (movie: MovieSummary) => {
+    if (isDrawing) {
+      return;
+    }
+
     setActiveMovieId(movie.id);
   };
 
   return (
     <section
-      className={clsx(styles.banner, variant === 'compact' && styles.compact)}
+      className={clsx(styles.banner, variant === 'compact' && styles.compact, isDrawing && styles.drawing)}
       data-action-mode={actionMode}
       data-source-type={sourceType}
       onBlur={() => setIsPaused(false)}
@@ -207,16 +259,25 @@ export function LotteryBanner({ actionMode, movies, sourceType, variant = 'hero'
         <strong>{activeMovie?.title ?? '暂无候选电影'}</strong>
         <p>{variant === 'compact' ? getMovieMeta(activeMovie) : activeMovie?.overview || getMovieMeta(activeMovie)}</p>
         <div className={styles.panelActions}>
-          {isFavoriteLottery ? (
-            <button disabled={candidates.length < 2} type="button" onClick={handleChangeMovie}>
-              <Shuffle size={16} />
-              <span>换一换</span>
+          {!activeMovie && isFavoriteLottery ? (
+            <button type="button" onClick={() => navigate('/')}>
+              <Search size={16} />
+              <span>去发现电影</span>
             </button>
-          ) : null}
-          <button disabled={!activeMovie} type="button" onClick={() => openMovieDetail(activeMovie)}>
-            <ExternalLink size={16} />
-            <span>打开详情</span>
-          </button>
+          ) : (
+            <>
+              {isFavoriteLottery ? (
+                <button disabled={candidates.length < 2 || isDrawing} type="button" onClick={handleChangeMovie}>
+                  <Shuffle size={16} />
+                  <span>{isDrawing ? '抽选中' : '换一换'}</span>
+                </button>
+              ) : null}
+              <button disabled={!activeMovie || isDrawing} type="button" onClick={() => openMovieDetail(activeMovie)}>
+                <ExternalLink size={16} />
+                <span>打开详情</span>
+              </button>
+            </>
+          )}
         </div>
       </motion.div>
 
@@ -227,6 +288,7 @@ export function LotteryBanner({ actionMode, movies, sourceType, variant = 'hero'
               <button
                 aria-label={`定位到 ${item.movie.title}`}
                 className={clsx(styles.poster, item.movie.id === activeMovie?.id && styles.posterActive)}
+                disabled={isDrawing}
                 key={`${item.movie.id}-${item.visualIndex}`}
                 type="button"
                 onClick={() => handleSelectMovie(item.movie)}
