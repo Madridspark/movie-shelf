@@ -1,6 +1,8 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { movieService } from './movie-service';
+
+export const HOME_BANNER_MOVIES_QUERY_KEY = ['movies', 'home-banner', 'trending-week'] as const;
 
 export function useMovieSearchQuery(query: string) {
   return useInfiniteQuery({
@@ -30,8 +32,12 @@ export function useNowPlayingMoviesQuery() {
 }
 
 export function useHomeBannerMoviesQuery() {
-  return useQuery({
-    queryKey: ['movies', 'home-banner', 'trending-week'],
+  return useQuery(homeBannerMoviesQueryOptions());
+}
+
+export function homeBannerMoviesQueryOptions() {
+  return queryOptions({
+    queryKey: HOME_BANNER_MOVIES_QUERY_KEY,
     queryFn: () => movieService.getHomeBannerMovies()
   });
 }
