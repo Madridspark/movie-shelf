@@ -2,7 +2,7 @@
 
 [English](./README.en.md)
 
-MovieShelf 是一个基于 TMDB 的电影发现与收藏应用。它提供电影搜索、无限滚动结果流、电影详情、多收藏夹管理和 Watch Lottery，适合作为一个现代前端电影数据库项目示例。
+MovieShelf 是一个基于 TMDB 的电影发现与收藏应用。它提供电影搜索、无限滚动结果流、电影详情、多收藏夹管理和 Watch Lottery。
 
 线上地址：[https://movie.zhangpengbo.com](https://movie.zhangpengbo.com)
 
@@ -147,8 +147,6 @@ bash scripts/deploy.sh
 - 图片尺寸来自 TMDB `/configuration`。
 - 海报、头像和卡片区域使用稳定宽高比，降低 CLS。
 - 非首屏图片使用 lazy loading 和 async decoding。
-
-最近一次 Lighthouse 结果记录在 q3 交付文档中：[MovieShelf 项目交付报告](https://www.zhangpengbo.com/dogcatstar-quiz/?doc=q3)。
 
 ## 数据来源
 

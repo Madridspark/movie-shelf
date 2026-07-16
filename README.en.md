@@ -144,8 +144,6 @@ Implemented performance work includes:
 - Stable poster, avatar, and card aspect ratios to reduce CLS.
 - Lazy loading and async decoding for non-critical images.
 
-The latest Lighthouse result is documented in the q3 delivery report: [MovieShelf Delivery Report](https://www.zhangpengbo.com/dogcatstar-quiz/?doc=q3).
-
 ## Data Source
 
 This product uses the TMDB API but is not endorsed or certified by TMDB.
