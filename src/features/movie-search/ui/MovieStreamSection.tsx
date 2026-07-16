@@ -1,11 +1,9 @@
-import { RefreshCw } from 'lucide-react';
-
 import { MovieSummary } from '@entities/movie/model/types';
 import { MovieCard } from '@entities/movie/ui/movie-card';
 import { MovieWaterfallGrid } from '@entities/movie/ui/movie-waterfall-grid';
-import { Button } from '@shared/ui/button';
 import { StateResult } from '@shared/ui/state-result';
 
+import { NetworkErrorDialog } from './NetworkErrorDialog';
 import styles from './index.module.less';
 
 type MovieStreamSectionProps = {
@@ -50,18 +48,7 @@ export function MovieStreamSection({
         </span>
       </div>
 
-      {hasError ? (
-        <StateResult
-          action={
-            <Button icon={<RefreshCw size={16} />} type="button" onClick={onRefetch}>
-              重试
-            </Button>
-          }
-          description="请确认 TMDB Token 或稍后重试。"
-          title="暂时无法加载电影数据"
-          variant="error"
-        />
-      ) : null}
+      <NetworkErrorDialog open={hasError} onRetry={onRefetch} />
 
       <MovieWaterfallGrid isInitialLoading={isInitialLoading}>
         {movies.map((movie) => (

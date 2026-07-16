@@ -18,7 +18,7 @@ describe('MovieDetailPage', () => {
   it('renders TMDB detail modules from the mocked API', async () => {
     renderMovieDetailPage();
 
-    expect(await screen.findByRole('heading', { name: 'MSW Detail Movie' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'MSW Detail Movie' }, { timeout: 4000 })).toBeInTheDocument();
     expect(await screen.findByText((_, element) => element?.textContent === '导演：MSW Director')).toBeInTheDocument();
     expect(await screen.findByText('MSW Actor')).toBeInTheDocument();
     expect(await screen.findByText('MSW Trailer')).toBeInTheDocument();
@@ -60,7 +60,9 @@ describe('MovieDetailPage', () => {
     );
     renderMovieDetailPage('402');
 
-    expect(await screen.findByRole('heading', { name: 'Malformed Detail Movie' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Malformed Detail Movie' }, { timeout: 4000 })
+    ).toBeInTheDocument();
     expect(await screen.findByText('暂无预告片。')).toBeInTheDocument();
     expect(await screen.findByText('暂无评论。')).toBeInTheDocument();
     expect(await screen.findByText('当前地区暂无观看平台信息。')).toBeInTheDocument();

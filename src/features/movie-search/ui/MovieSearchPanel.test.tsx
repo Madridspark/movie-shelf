@@ -57,13 +57,14 @@ describe('MovieSearchPanel', () => {
     expect(screen.getByLabelText('搜索电影')).toHaveValue('nothing');
   });
 
-  it('shows a retryable error state without clearing the search keyword', async () => {
+  it('shows a retryable network dialog without clearing the search keyword', async () => {
     server.use(http.get(`${tmdbBaseUrl}/search/movie`, () => HttpResponse.json({}, { status: 500 })));
     renderMovieSearchPanel();
 
     fireEvent.change(screen.getByLabelText('搜索电影'), { target: { value: 'broken' } });
 
-    expect(await screen.findByText('暂时无法加载电影数据', {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: '网络连接断开' }, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.getByText('请检查网络连接后重试。')).toBeInTheDocument();
     expect(screen.getByLabelText('搜索电影')).toHaveValue('broken');
   });
 });
