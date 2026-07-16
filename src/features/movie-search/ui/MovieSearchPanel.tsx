@@ -38,7 +38,7 @@ import styles from './index.module.less';
 const SEARCH_STREAM_LIMIT = 100;
 const MIN_HOME_ITEMS = 36;
 const HOME_BACKGROUND_FETCH_DELAY = 360;
-const HOME_DATA_REQUEST_DELAY = globalThis.navigator?.userAgent.includes('jsdom') ? 0 : 3200;
+const HOME_DATA_REQUEST_DELAY = globalThis.navigator?.userAgent.includes('jsdom') ? 0 : 9000;
 const HOME_PAGE_PRELOAD_IMAGE_COUNT = 8;
 const SEARCH_SORT_OPTIONS: DropdownSelectOption<MovieSearchSortMode>[] = [
   { label: '相关性', value: 'relevance' },

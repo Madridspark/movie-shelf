@@ -9,7 +9,7 @@ import type { MovieSearchResult } from '@entities/movie/model/types';
 
 import { store } from '@store/index';
 
-const BANNER_PREFETCH_DELAY = 5200;
+const BANNER_PREFETCH_DELAY = 10000;
 
 function preloadBannerImages(movies: MovieSearchResult | undefined) {
   movies?.items.slice(0, 4).forEach((movie) => {

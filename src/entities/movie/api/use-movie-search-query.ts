@@ -25,6 +25,11 @@ export function useNowPlayingMoviesQuery(enabled = true) {
     queryKey: ['movies', 'now-playing'],
     queryFn: ({ pageParam }) => movieService.getNowPlayingMovies(Number(pageParam)),
     enabled,
+    initialData: {
+      pageParams: [1],
+      pages: [HOME_BANNER_INITIAL_MOVIES]
+    },
+    initialDataUpdatedAt: 0,
     getNextPageParam: (lastPage) => {
       const nextPage = lastPage.page + 1;
 
