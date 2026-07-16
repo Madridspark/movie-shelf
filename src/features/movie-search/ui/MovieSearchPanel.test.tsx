@@ -1,10 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { AppProviders } from '@app/providers/AppProviders';
 
+import { server } from '../../../test/msw/server';
 import { MovieSearchPanel } from './MovieSearchPanel';
+
+const tmdbBaseUrl = 'https://api.themoviedb.org/3';
 
 function renderMovieSearchPanel() {
   return render(
@@ -19,6 +23,7 @@ describe('MovieSearchPanel', () => {
     renderMovieSearchPanel();
 
     expect(await screen.findByText('MSW Now Playing')).toBeInTheDocument();
+    expect(await screen.findByText('Drama')).toBeInTheDocument();
   });
 
   it('switches to search state and renders search results', async () => {
@@ -30,5 +35,35 @@ describe('MovieSearchPanel', () => {
 
     expect(await screen.findByText('搜索结果')).toBeInTheDocument();
     expect(await screen.findByText('MSW Search Result')).toBeInTheDocument();
+    expect(screen.queryByText('本周热映')).not.toBeInTheDocument();
+  });
+
+  it('keeps the search box usable when search returns an empty result', async () => {
+    server.use(
+      http.get(`${tmdbBaseUrl}/search/movie`, () =>
+        HttpResponse.json({
+          page: 1,
+          results: [],
+          total_pages: 1,
+          total_results: 0
+        })
+      )
+    );
+    renderMovieSearchPanel();
+
+    fireEvent.change(screen.getByLabelText('搜索电影'), { target: { value: 'nothing' } });
+
+    expect(await screen.findByText('没有找到相关电影')).toBeInTheDocument();
+    expect(screen.getByLabelText('搜索电影')).toHaveValue('nothing');
+  });
+
+  it('shows a retryable error state without clearing the search keyword', async () => {
+    server.use(http.get(`${tmdbBaseUrl}/search/movie`, () => HttpResponse.json({}, { status: 500 })));
+    renderMovieSearchPanel();
+
+    fireEvent.change(screen.getByLabelText('搜索电影'), { target: { value: 'broken' } });
+
+    expect(await screen.findByText('暂时无法加载电影数据', {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.getByLabelText('搜索电影')).toHaveValue('broken');
   });
 });

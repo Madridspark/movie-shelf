@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTmdbMovieDetail, parseTmdbSearchResponse } from './tmdb-schemas';
+import { parseTmdbGenreListResponse, parseTmdbMovieDetail, parseTmdbSearchResponse } from './tmdb-schemas';
 
 describe('tmdb schema parsers', () => {
   it('drops invalid search items and keeps the page usable', () => {
@@ -41,5 +41,16 @@ describe('tmdb schema parsers', () => {
     expect(parsedMovie.genres).toEqual([]);
     expect(parsedMovie.reviews?.results).toEqual([]);
     expect(parsedMovie.videos?.results).toHaveLength(1);
+  });
+
+  it('normalizes the movie genre list and drops invalid items', () => {
+    const parsedGenreList = parseTmdbGenreListResponse({
+      genres: [
+        { id: '18', name: 'Drama' },
+        { name: 'Missing id' }
+      ]
+    });
+
+    expect(parsedGenreList.genres).toEqual([{ id: 18, name: 'Drama' }]);
   });
 });

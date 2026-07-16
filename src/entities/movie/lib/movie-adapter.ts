@@ -1,4 +1,5 @@
 import {
+  Genre,
   MovieDetail,
   MovieSearchResult,
   MovieSummary,
@@ -34,11 +35,21 @@ function buildImageUrl(baseUrl: string, path: string | null | undefined) {
   return path ? `${baseUrl}${path}` : null;
 }
 
+export type MovieGenreMap = Record<number, Genre>;
+
+function mapGenreIds(genreIds: number[] | undefined, genreMap: MovieGenreMap) {
+  return genreIds
+    ?.map((genreId) => genreMap[genreId])
+    .filter((genre): genre is Genre => Boolean(genre)) ?? [];
+}
+
 export function adaptTmdbMovieSummary(
   movie: TmdbMovieSummary,
-  imageConfig: TmdbImageConfig = fallbackTmdbImageConfig
+  imageConfig: TmdbImageConfig = fallbackTmdbImageConfig,
+  genreMap: MovieGenreMap = {}
 ): MovieSummary {
   const releaseDate = movie.release_date ?? movie.first_air_date ?? '';
+  const genreIds = Array.isArray(movie.genre_ids) ? movie.genre_ids : [];
 
   return {
     id: movie.id,
@@ -46,7 +57,8 @@ export function adaptTmdbMovieSummary(
     title: movie.title ?? movie.name ?? UNKNOWN_MOVIE_TITLE,
     overview: movie.overview ?? '',
     backdropUrl: buildImageUrl(imageConfig.backdropBaseUrl, movie.backdrop_path),
-    genreIds: Array.isArray(movie.genre_ids) ? movie.genre_ids : [],
+    genres: mapGenreIds(genreIds, genreMap),
+    genreIds,
     posterUrl: buildImageUrl(imageConfig.posterBaseUrl, movie.poster_path),
     releaseDate,
     releaseYear: releaseDate ? Number(releaseDate.slice(0, 4)) : null,
@@ -57,10 +69,11 @@ export function adaptTmdbMovieSummary(
 
 export function adaptTmdbSearchResponse(
   response: TmdbSearchResponse,
-  imageConfig: TmdbImageConfig = fallbackTmdbImageConfig
+  imageConfig: TmdbImageConfig = fallbackTmdbImageConfig,
+  genreMap: MovieGenreMap = {}
 ): MovieSearchResult {
   return {
-    items: response.results.map((movie) => adaptTmdbMovieSummary(movie, imageConfig)),
+    items: response.results.map((movie) => adaptTmdbMovieSummary(movie, imageConfig, genreMap)),
     page: response.page,
     totalPages: response.total_pages,
     totalResults: response.total_results
@@ -138,9 +151,10 @@ function adaptWatchProviderGroup(
 
 export function adaptTmdbMovieDetail(
   movie: TmdbMovieDetail,
-  imageConfig: TmdbImageConfig = fallbackTmdbImageConfig
+  imageConfig: TmdbImageConfig = fallbackTmdbImageConfig,
+  genreMap: MovieGenreMap = {}
 ): MovieDetail {
-  const summary = adaptTmdbMovieSummary(movie, imageConfig);
+  const summary = adaptTmdbMovieSummary(movie, imageConfig, genreMap);
   const trailers = Array.isArray(movie.videos?.results)
     ? movie.videos.results
         .filter((video) => video.site === 'YouTube' && (video.type === 'Trailer' || video.type === 'Teaser'))
@@ -164,7 +178,7 @@ export function adaptTmdbMovieDetail(
       : [],
     language: movie.original_language ?? '',
     recommendations: movie.recommendations
-      ? adaptTmdbSearchResponse(movie.recommendations, imageConfig).items.slice(0, 12)
+      ? adaptTmdbSearchResponse(movie.recommendations, imageConfig, genreMap).items.slice(0, 12)
       : [],
     reviews: Array.isArray(movie.reviews?.results) ? movie.reviews.results.slice(0, 3).map(adaptReview) : [],
     runtime: movie.runtime ?? null,

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   TmdbCastMember,
   TmdbCrewMember,
+  TmdbGenreListResponse,
   TmdbMovieDetail,
   TmdbMovieSummary,
   TmdbReview,
@@ -86,6 +87,12 @@ const searchResponseEnvelopeSchema = z
   })
   .passthrough();
 
+const genreListEnvelopeSchema = z
+  .object({
+    genres: z.array(z.unknown()).catch([])
+  })
+  .passthrough();
+
 const movieDetailEnvelopeSchema = movieSummarySchema.extend({
   credits: z
     .object({
@@ -150,6 +157,20 @@ export function parseTmdbSearchResponse(value: unknown): TmdbSearchResponse {
     results: parseArrayItems<TmdbMovieSummary>(response.data.results, movieSummarySchema),
     total_pages: response.data.total_pages,
     total_results: response.data.total_results
+  };
+}
+
+export function parseTmdbGenreListResponse(value: unknown): TmdbGenreListResponse {
+  const response = genreListEnvelopeSchema.safeParse(value);
+
+  if (!response.success) {
+    return {
+      genres: []
+    };
+  }
+
+  return {
+    genres: parseArrayItems(response.data.genres, genreSchema)
   };
 }
 

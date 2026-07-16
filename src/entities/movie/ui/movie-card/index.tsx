@@ -24,6 +24,7 @@ export function MovieCard({
 }: MovieCardProps) {
   const [hasImageError, setHasImageError] = useState(false);
   const hasPoster = Boolean(movie.posterUrl) && !hasImageError;
+  const genreNames = movie.genres?.slice(0, 2).map((genre) => genre.name).filter(Boolean) ?? [];
 
   const handleToggleFavorite = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -54,6 +55,7 @@ export function MovieCard({
           <span>
             {movie.releaseYear ?? '未知年份'} / {movie.voteAverage.toFixed(1)}
           </span>
+          {genreNames.length > 0 ? <small>{genreNames.join(' / ')}</small> : null}
           {showOverview ? <p>{movie.overview || '暂无简介。'}</p> : null}
         </div>
       </Link>

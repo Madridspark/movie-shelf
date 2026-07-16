@@ -29,6 +29,26 @@ describe('movie adapter', () => {
     expect(movie.posterUrl).toBe('https://image.example/poster/poster.jpg');
   });
 
+  it('maps summary genre ids to genre names when a genre map is available', () => {
+    const movie = adaptTmdbMovieSummary(
+      {
+        genre_ids: [18, 53, 999],
+        id: 1,
+        title: 'Genre Movie'
+      },
+      imageConfig,
+      {
+        18: { id: 18, name: 'Drama' },
+        53: { id: 53, name: 'Thriller' }
+      }
+    );
+
+    expect(movie.genres).toEqual([
+      { id: 18, name: 'Drama' },
+      { id: 53, name: 'Thriller' }
+    ]);
+  });
+
   it('keeps optional detail modules safe when image paths are missing', () => {
     const movie = adaptTmdbMovieDetail(
       {

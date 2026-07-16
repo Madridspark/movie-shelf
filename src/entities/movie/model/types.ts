@@ -4,6 +4,7 @@ export type MovieSummary = {
   originalTitle: string;
   overview: string;
   backdropUrl: string | null;
+  genres?: Genre[];
   genreIds: number[];
   posterUrl: string | null;
   releaseDate: string;

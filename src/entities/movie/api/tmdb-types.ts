@@ -25,6 +25,10 @@ export type TmdbGenre = {
   name?: string;
 };
 
+export type TmdbGenreListResponse = {
+  genres: TmdbGenre[];
+};
+
 export type TmdbCastMember = {
   id: number;
   name?: string;

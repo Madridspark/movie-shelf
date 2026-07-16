@@ -12,6 +12,14 @@ const configurationResponse = {
   }
 };
 
+const genreListResponse = {
+  genres: [
+    { id: 12, name: 'Adventure' },
+    { id: 18, name: 'Drama' },
+    { id: 53, name: 'Thriller' }
+  ]
+};
+
 const nowPlayingResponse = {
   page: 1,
   results: [
@@ -72,9 +80,87 @@ const searchResponse = {
   total_results: 1
 };
 
+const detailResponse = {
+  backdrop_path: '/detail-backdrop.jpg',
+  credits: {
+    cast: [
+      {
+        character: 'Pilot',
+        id: 11,
+        name: 'MSW Actor',
+        profile_path: '/actor.jpg'
+      }
+    ],
+    crew: [
+      {
+        id: 12,
+        job: 'Director',
+        name: 'MSW Director',
+        profile_path: null
+      }
+    ]
+  },
+  genres: [{ id: 18, name: 'Drama' }],
+  id: 401,
+  original_language: 'en',
+  original_title: 'MSW Detail Movie',
+  overview: 'A mocked detail movie.',
+  poster_path: '/detail-poster.jpg',
+  recommendations: {
+    page: 1,
+    results: [],
+    total_pages: 1,
+    total_results: 0
+  },
+  release_date: '2026-05-01',
+  reviews: {
+    results: [
+      {
+        author: 'MSW Reviewer',
+        author_details: { rating: 8 },
+        content: 'A mocked review.',
+        created_at: '2026-07-16T00:00:00.000Z',
+        id: 'review-1'
+      }
+    ]
+  },
+  runtime: 120,
+  status: 'Released',
+  title: 'MSW Detail Movie',
+  videos: {
+    results: [
+      {
+        id: 'video-1',
+        key: 'youtube-key',
+        name: 'MSW Trailer',
+        site: 'YouTube',
+        type: 'Trailer'
+      }
+    ]
+  },
+  vote_average: 8.4,
+  vote_count: 320,
+  'watch/providers': {
+    results: {
+      US: {
+        flatrate: [
+          {
+            logo_path: '/provider.jpg',
+            provider_id: 1,
+            provider_name: 'MSW Stream'
+          }
+        ],
+        link: 'https://example.com/watch'
+      }
+    }
+  }
+};
+
 export const tmdbHandlers = [
   http.get(`${tmdbBaseUrl}/configuration`, () => HttpResponse.json(configurationResponse)),
+  http.get(`${tmdbBaseUrl}/genre/movie/list`, () => HttpResponse.json(genreListResponse)),
   http.get(`${tmdbBaseUrl}/movie/now_playing`, () => HttpResponse.json(nowPlayingResponse)),
   http.get(`${tmdbBaseUrl}/trending/movie/week`, () => HttpResponse.json(bannerResponse)),
+  http.get(`${tmdbBaseUrl}/movie/:movieId`, () => HttpResponse.json(detailResponse)),
   http.get(`${tmdbBaseUrl}/search/movie`, () => HttpResponse.json(searchResponse))
 ];
