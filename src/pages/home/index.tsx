@@ -45,13 +45,17 @@ function preloadHeroImage(imageUrl: string) {
 function HomePageLoadingShell() {
   return (
     <section aria-label="正在加载首页" className={styles.loadingPage}>
-      <img
-        alt="MovieShelf"
-        className={styles.loadingLogo}
-        decoding="async"
-        fetchPriority="high"
-        src="/assets/brand/movie-shelf-horizontal-white.png"
-      />
+      <div className={styles.loadingStage} aria-hidden="true">
+        <span className={styles.loadingOrbit} />
+        <span className={styles.loadingSweep} />
+        <img
+          alt=""
+          className={styles.loadingLogo}
+          decoding="async"
+          fetchPriority="high"
+          src="/assets/brand/movie-shelf-horizontal-white.png"
+        />
+      </div>
       <p className={styles.loadingText}>正在加载本周热映...</p>
     </section>
   );
