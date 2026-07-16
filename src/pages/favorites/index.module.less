@@ -145,6 +145,47 @@
   padding: 42px clamp(24px, 4vw, 56px) 72px;
 }
 
+.storageNotice,
+.storageNoticeReset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid fade(@gold, 36%);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: fade(@gold, 12%);
+
+  strong {
+    display: block;
+    color: @text-main;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: @text-muted;
+    line-height: 1.6;
+  }
+
+  button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    border: 1px solid @border-subtle;
+    border-radius: 999px;
+    padding: 0 14px;
+    background: @surface-strong;
+    color: @text-main;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+  }
+}
+
+.storageNoticeReset {
+  border-color: fade(#ff6b4a, 38%);
+  background: fade(#ff6b4a, 12%);
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -323,4 +364,9 @@
     flex-direction: column;
   }
 
+  .storageNotice,
+  .storageNoticeReset {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

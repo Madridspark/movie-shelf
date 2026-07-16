@@ -1,7 +1,7 @@
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import clsx from 'clsx';
-import { Heart, RefreshCw, Search } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import {
@@ -10,8 +10,6 @@ import {
   useNowPlayingMoviesQuery
 } from '@entities/movie/api/use-movie-search-query';
 import { MovieSummary } from '@entities/movie/model/types';
-import { MovieCard } from '@entities/movie/ui/movie-card';
-import { MovieWaterfallGrid } from '@entities/movie/ui/movie-waterfall-grid';
 import {
   addMovieToCollection,
   DEFAULT_COLLECTION_ID,
@@ -25,11 +23,12 @@ import {
   setMovieSearchSortMode
 } from '@features/preferences/model/preferences-slice';
 import { useDebouncedValue } from '@shared/lib/useDebouncedValue';
-import { Button } from '@shared/ui/button';
-import { DropdownSelect, DropdownSelectOption } from '@shared/ui/dropdown-select';
-import { StateResult } from '@shared/ui/state-result';
+import { DropdownSelectOption } from '@shared/ui/dropdown-select';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 
+import { HomeDiscoverySearch } from './HomeDiscoverySearch';
+import { HomeToolbar } from './HomeToolbar';
+import { MovieStreamSection } from './MovieStreamSection';
 import styles from './index.module.less';
 
 const MOVIE_STREAM_LIMIT = 100;
@@ -96,10 +95,6 @@ export function MovieSearchPanel() {
     () => new Set(defaultCollection?.movieIds ?? []),
     [defaultCollection?.movieIds]
   );
-
-  const handleKeywordChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setKeyword(event.target.value);
-  };
 
   const handleSortModeChange = (nextSortMode: MovieSearchSortMode) => {
     dispatch(setMovieSearchSortMode(nextSortMode));
@@ -168,82 +163,35 @@ export function MovieSearchPanel() {
       </Link>
 
       <div className={clsx(styles.content, isSearching && styles.searchContent)}>
-        <div className={isSearching ? styles.searchToolbar : undefined}>
-          <label className={styles.searchBar}>
-            <Search size={22} />
-            <input
-              aria-label="搜索电影"
-              onChange={handleKeywordChange}
-              placeholder="搜索电影、导演、演员"
-              type="search"
-              value={keyword}
-            />
-          </label>
-
-          {isSearching ? (
-            <div className={styles.toolbarActions}>
-              <DropdownSelect
-                ariaLabel="搜索结果排序"
-                options={SEARCH_SORT_OPTIONS}
-                value={searchSortMode}
-                onValueChange={handleSortModeChange}
-              />
-              <Link to="/favorites">
-                <Heart size={18} />
-                收藏夹
-              </Link>
-            </div>
-          ) : null}
-        </div>
-
-        <div className={styles.gridHeader}>
-          <span>{isSearching ? '搜索结果' : '最新上映'}</span>
-          <span>
-            {displayMovies.length > 0
-              ? `${displayMovies.length}${displayMovies.length >= MOVIE_STREAM_LIMIT ? ' / 已达上限' : ' 部'}`
-              : ''}
-          </span>
-        </div>
-
-        {hasError ? (
-          <StateResult
-            action={
-              <Button icon={<RefreshCw size={16} />} type="button" onClick={() => void refetchMovies()}>
-                重试
-              </Button>
-            }
-            description="请确认 TMDB Token 或稍后重试。"
-            title="暂时无法加载电影数据"
-            variant="error"
+        {isSearching ? (
+          <HomeToolbar
+            keyword={keyword}
+            sortMode={searchSortMode}
+            sortOptions={SEARCH_SORT_OPTIONS}
+            onKeywordChange={setKeyword}
+            onSortModeChange={handleSortModeChange}
           />
-        ) : null}
+        ) : (
+          <HomeDiscoverySearch keyword={keyword} onKeywordChange={setKeyword} />
+        )}
 
-        <MovieWaterfallGrid isInitialLoading={isLoading && displayMovies.length === 0}>
-          {displayMovies.map((movie) => (
-            <MovieCard
-              isFavorited={defaultFavoriteMovieIds.has(movie.id)}
-              key={movie.id}
-              movie={movie}
-              showOverview={isSearching}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          ))}
-        </MovieWaterfallGrid>
-
-        {!hasError && !isLoading && displayMovies.length === 0 ? (
-          <StateResult
-            description={isSearching ? '换个关键词再试试。' : '稍后刷新看看新的片单。'}
-            title={isSearching ? '没有找到相关电影' : '暂无最新上映电影'}
-          />
-        ) : null}
-
-        <div className={styles.loadMore} ref={loadMoreRef}>
-          {isFetchingNextPage ? '正在加载更多...' : null}
-          {!isFetchingNextPage && reachedStreamLimit ? '已达到本页加载上限' : null}
-          {!isFetchingNextPage && !reachedStreamLimit && !canLoadMore && displayMovies.length > 0
-            ? '已经到底了'
-            : null}
-        </div>
+        <MovieStreamSection
+          canLoadMore={canLoadMore}
+          defaultFavoriteMovieIds={defaultFavoriteMovieIds}
+          hasError={hasError}
+          isFetchingNextPage={isFetchingNextPage}
+          isInitialLoading={isLoading && displayMovies.length === 0}
+          isLoading={isLoading}
+          isSearching={isSearching}
+          loadMoreRef={(element) => {
+            loadMoreRef.current = element;
+          }}
+          movies={displayMovies}
+          reachedStreamLimit={reachedStreamLimit}
+          streamLimit={MOVIE_STREAM_LIMIT}
+          onRefetch={() => void refetchMovies()}
+          onToggleFavorite={handleToggleFavorite}
+        />
       </div>
     </section>
   );

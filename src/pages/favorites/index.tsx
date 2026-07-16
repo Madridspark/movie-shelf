@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { Home, Plus, Trash2 } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { MovieCard } from '@entities/movie/ui/movie-card';
-import { MovieWaterfallGrid } from '@entities/movie/ui/movie-waterfall-grid';
+import { getFavoritesStorageNotice } from '@features/favorites/model/favorites-storage';
 import {
   createFavoriteCollection,
   deleteFavoriteCollection,
@@ -25,13 +24,14 @@ import {
   selectFavoriteLotterySource,
   selectFavoriteSortMode
 } from '@features/favorites/model/favorites-selectors';
-import { LotteryBanner } from '@features/lottery-banner/ui/LotteryBanner';
-import { Button } from '@shared/ui/button';
-import * as Dialog from '@shared/ui/dialog';
-import { DropdownSelect, DropdownSelectOption } from '@shared/ui/dropdown-select';
-import { StateResult } from '@shared/ui/state-result';
+import { DropdownSelectOption } from '@shared/ui/dropdown-select';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 
+import { FavoriteHeader } from './components/FavoriteHeader';
+import { FavoriteLotteryPanel } from './components/FavoriteLotteryPanel';
+import { FavoriteMovieGrid } from './components/FavoriteMovieGrid';
+import { FavoriteSidebar } from './components/FavoriteSidebar';
+import { FavoriteStorageNotice } from './components/FavoriteStorageNotice';
 import styles from './index.module.less';
 
 const FAVORITE_SORT_OPTIONS: DropdownSelectOption<FavoriteSortMode>[] = [
@@ -47,10 +47,6 @@ const LOTTERY_SOURCE_OPTIONS: DropdownSelectOption<FavoriteLotterySource>[] = [
   { label: '当前收藏夹', value: 'favorite' }
 ];
 
-function formatCollectionDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString();
-}
-
 export function FavoritesPage() {
   const dispatch = useAppDispatch();
   const collections = useAppSelector(selectFavoriteCollections);
@@ -59,6 +55,7 @@ export function FavoritesPage() {
   const allMovies = useAppSelector(selectAllFavoriteMovies);
   const sortMode = useAppSelector(selectFavoriteSortMode);
   const lotterySource = useAppSelector(selectFavoriteLotterySource);
+  const [storageNotice, setStorageNotice] = useState(() => getFavoritesStorageNotice());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [renameValue, setRenameValue] = useState(activeCollection?.name ?? '');
@@ -119,177 +116,56 @@ export function FavoritesPage() {
         </Link>
       </nav>
 
-      <aside className={styles.sidebar}>
-        <Link className={styles.logo} to="/">
-          <img alt="MovieShelf" src="/assets/brand/movie-shelf-horizontal-white.png" />
-        </Link>
-        <h1>收藏夹</h1>
-        <div className={styles.mobileCollectionSelect}>
-          <DropdownSelect
-            ariaLabel="切换收藏夹"
-            options={collectionOptions}
-            value={activeCollection?.id ?? DEFAULT_COLLECTION_ID}
-            onValueChange={handleActiveCollectionChange}
-          />
-        </div>
-        <div className={styles.collectionList}>
-          {collections.map((collection) => (
-            <button
-              className={collection.id === activeCollection?.id ? styles.activeCollection : undefined}
-              key={collection.id}
-              type="button"
-              onClick={() => {
-                dispatch(setActiveCollection(collection.id));
-                setRenameValue(collection.name);
-              }}
-            >
-              <span>
-                <strong>{collection.name}</strong>
-                <small>
-                  创建 {formatCollectionDate(collection.createdAt)} / 更新 {formatCollectionDate(collection.updatedAt)}
-                </small>
-              </span>
-              <em>{collection.movieIds.length}</em>
-            </button>
-          ))}
-        </div>
-        <div className={styles.createBox}>
-          <Dialog.Root
-            open={isCreateDialogOpen}
-            onOpenChange={(nextOpen) => {
-              setIsCreateDialogOpen(nextOpen);
+      <FavoriteSidebar
+        activeCollectionId={activeCollection?.id}
+        collectionOptions={collectionOptions}
+        collections={collections}
+        isCreateDialogOpen={isCreateDialogOpen}
+        newCollectionName={newCollectionName}
+        onActiveCollectionChange={handleActiveCollectionChange}
+        onCreateCollection={handleCreateCollection}
+        onCreateDialogOpenChange={(nextOpen) => {
+          setIsCreateDialogOpen(nextOpen);
 
-              if (!nextOpen) {
-                setNewCollectionName('');
-              }
-            }}
-          >
-            <Dialog.Trigger asChild>
-              <button type="button">
-                <Plus size={16} />
-                新建收藏夹
-              </button>
-            </Dialog.Trigger>
-            <Dialog.Portal>
-              <Dialog.Overlay className={styles.dialogOverlay} />
-              <Dialog.Content className={styles.dialogContent}>
-                <Dialog.Title className={styles.dialogTitle}>新建收藏夹</Dialog.Title>
-                <Dialog.Description className={styles.dialogDescription}>
-                  给新的电影片单起一个方便识别的名字。
-                </Dialog.Description>
-                <input
-                  aria-label="新收藏夹名称"
-                  className={styles.dialogInput}
-                  onChange={(event) => setNewCollectionName(event.target.value)}
-                  placeholder="例如：周末片单"
-                  value={newCollectionName}
-                />
-                <div className={styles.dialogFooter}>
-                  <Dialog.Close asChild>
-                    <button type="button">取消</button>
-                  </Dialog.Close>
-                  <button type="button" onClick={handleCreateCollection}>
-                    创建
-                  </button>
-                </div>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
-        </div>
-      </aside>
+          if (!nextOpen) {
+            setNewCollectionName('');
+          }
+        }}
+        onNewCollectionNameChange={setNewCollectionName}
+      />
 
       <main className={styles.main}>
-        <header className={styles.header}>
-          <div>
-            <input
-              aria-label="收藏夹名称"
-              onBlur={handleRenameCollection}
-              onChange={(event) => setRenameValue(event.target.value)}
-              value={renameValue}
-            />
-            <p>
-              {activeMovies.length} 部电影 / 最近更新{' '}
-              {activeCollection ? new Date(activeCollection.updatedAt).toLocaleDateString() : '-'}
-            </p>
-          </div>
-          <div className={styles.headerActions}>
-            <DropdownSelect
-              ariaLabel="收藏夹排序"
-              options={FAVORITE_SORT_OPTIONS}
-              value={sortMode}
-              onValueChange={(nextSortMode) => dispatch(setFavoriteSortMode(nextSortMode))}
-            />
-            <Dialog.Root open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-              <Dialog.Trigger asChild>
-                <button disabled={activeCollection?.id === DEFAULT_COLLECTION_ID} type="button">
-                  <Trash2 size={16} />
-                  删除
-                </button>
-              </Dialog.Trigger>
-              <Dialog.Portal>
-                <Dialog.Overlay className={styles.dialogOverlay} />
-                <Dialog.Content className={styles.dialogContent}>
-                  <Dialog.Title className={styles.dialogTitle}>删除收藏夹</Dialog.Title>
-                  <Dialog.Description className={styles.dialogDescription}>
-                    删除「{activeCollection?.name}」后，其中的电影会从这个收藏夹移除，不影响其它收藏夹。
-                  </Dialog.Description>
-                  <div className={styles.dialogFooter}>
-                    <Dialog.Close asChild>
-                      <button type="button">取消</button>
-                    </Dialog.Close>
-                    <button type="button" onClick={handleDeleteCollection}>
-                      确认删除
-                    </button>
-                  </div>
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog.Root>
-          </div>
-        </header>
+        {storageNotice ? (
+          <FavoriteStorageNotice notice={storageNotice} onDismiss={() => setStorageNotice(null)} />
+        ) : null}
 
-        <div className={styles.lotteryWrap}>
-          <div className={styles.lotteryHeader}>
-            <span>随机片单</span>
-            <DropdownSelect
-              ariaLabel="随机片单来源"
-              options={LOTTERY_SOURCE_OPTIONS}
-              value={lotterySource}
-              onValueChange={(nextSource) => dispatch(setFavoriteLotterySource(nextSource))}
-            />
-          </div>
-          <LotteryBanner
-            actionMode={lotterySource === 'allFavorites' ? 'readonly' : 'removeFromFavorite'}
-            movies={lotteryMovies.map((item) => item.movie)}
-            sourceType={lotterySource}
-            variant="compact"
-          />
-        </div>
+        <FavoriteHeader
+          activeCollection={activeCollection}
+          activeMovieCount={activeMovies.length}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          renameValue={renameValue}
+          sortMode={sortMode}
+          sortOptions={FAVORITE_SORT_OPTIONS}
+          onDeleteCollection={handleDeleteCollection}
+          onDeleteDialogOpenChange={setIsDeleteDialogOpen}
+          onRenameCommit={handleRenameCollection}
+          onRenameValueChange={setRenameValue}
+          onSortModeChange={(nextSortMode) => dispatch(setFavoriteSortMode(nextSortMode))}
+        />
 
-        {activeMovies.length > 0 ? (
-          <MovieWaterfallGrid>
-            {activeMovies.map(({ movie }) => (
-              <MovieCard
-                action={
-                  <Button type="button" onClick={() => dispatch(removeMovieFromCollection({ movieId: movie.id }))}>
-                    移除
-                  </Button>
-                }
-                key={movie.id}
-                movie={movie}
-              />
-            ))}
-          </MovieWaterfallGrid>
-        ) : (
-          <StateResult
-            action={
-              <Button asChild>
-                <Link to="/">去发现电影</Link>
-              </Button>
-            }
-            description="回到首页搜索或浏览最新上映电影，把想看的电影加入收藏夹。"
-            title={allMovies.length > 0 && activeMovieSet.size === 0 ? '当前收藏夹为空' : '还没有收藏电影'}
-          />
-        )}
+        <FavoriteLotteryPanel
+          lotteryMovies={lotteryMovies}
+          lotterySource={lotterySource}
+          sourceOptions={LOTTERY_SOURCE_OPTIONS}
+          onLotterySourceChange={(nextSource) => dispatch(setFavoriteLotterySource(nextSource))}
+        />
+
+        <FavoriteMovieGrid
+          activeMovieSet={activeMovieSet}
+          allMovies={allMovies}
+          movies={activeMovies}
+          onRemoveMovie={(movieId) => dispatch(removeMovieFromCollection({ movieId }))}
+        />
       </main>
     </section>
   );
