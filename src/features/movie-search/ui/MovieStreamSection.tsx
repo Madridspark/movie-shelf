@@ -16,6 +16,7 @@ type MovieStreamSectionProps = {
   isSearching: boolean;
   loadMoreRef: (element: HTMLDivElement | null) => void;
   movies: MovieSummary[];
+  priorityImageCount?: number;
   reachedStreamLimit: boolean;
   streamLimit?: number;
   onRefetch: () => void;
@@ -34,6 +35,7 @@ export function MovieStreamSection({
   movies,
   onRefetch,
   onToggleFavorite,
+  priorityImageCount = 0,
   reachedStreamLimit,
   streamLimit
 }: MovieStreamSectionProps) {
@@ -51,11 +53,12 @@ export function MovieStreamSection({
       <NetworkErrorDialog open={hasError} onRetry={onRefetch} />
 
       <MovieWaterfallGrid isInitialLoading={isInitialLoading}>
-        {movies.map((movie) => (
+        {movies.map((movie, index) => (
           <MovieCard
             isFavorited={defaultFavoriteMovieIds.has(movie.id)}
             key={movie.id}
             movie={movie}
+            priority={index < priorityImageCount}
             showOverview={isSearching}
             onToggleFavorite={onToggleFavorite}
           />

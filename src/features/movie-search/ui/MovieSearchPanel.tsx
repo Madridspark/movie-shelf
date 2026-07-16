@@ -325,7 +325,12 @@ export function MovieSearchPanel() {
       ) : null}
 
       <Link className={styles.logo} to="/">
-        <img alt="MovieShelf" src="/assets/brand/movie-shelf-horizontal-white.png" />
+        <img
+          alt="MovieShelf"
+          decoding="async"
+          fetchPriority="high"
+          src="/assets/brand/movie-shelf-horizontal-white.png"
+        />
       </Link>
 
       <Link aria-label="打开收藏夹" className={styles.favoriteAction} to="/favorites">
@@ -357,6 +362,7 @@ export function MovieSearchPanel() {
             loadMoreRef.current = element;
           }}
           movies={displayMovies}
+          priorityImageCount={!isSearching ? 4 : 0}
           reachedStreamLimit={reachedStreamLimit}
           streamLimit={streamLimit}
           onRefetch={() => void refetchMovies()}

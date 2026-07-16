@@ -11,6 +11,7 @@ type MovieCardProps = {
   action?: ReactNode;
   isFavorited?: boolean;
   movie: MovieSummary;
+  priority?: boolean;
   showOverview?: boolean;
   onToggleFavorite?: (movie: MovieSummary) => void;
 };
@@ -20,6 +21,7 @@ export function MovieCard({
   isFavorited = false,
   movie,
   onToggleFavorite,
+  priority = false,
   showOverview = false
 }: MovieCardProps) {
   const [hasImageError, setHasImageError] = useState(false);
@@ -40,7 +42,8 @@ export function MovieCard({
             <img
               alt={movie.title}
               decoding="async"
-              loading="lazy"
+              fetchPriority={priority ? 'high' : 'auto'}
+              loading={priority ? 'eager' : 'lazy'}
               src={movie.posterUrl ?? undefined}
               onError={() => setHasImageError(true)}
             />
