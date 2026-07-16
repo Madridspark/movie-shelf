@@ -1,10 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import clsx from 'clsx';
+import useEmblaCarousel from 'embla-carousel-react';
+import { ExternalLink, Shuffle } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 
 import { MovieSummary } from '@entities/movie/model/types';
+import {
+  buildLotteryVisualQueue,
+  findVisualIndexByMovieId,
+  getNextLotteryIndex,
+  getNextSequentialIndex,
+  getUniqueLotteryMovies
+} from '@features/lottery-banner/lib/lottery-candidates';
 
 import styles from './index.module.less';
 
-type LotterySourceType = 'homeBanner' | 'homeNowPlaying' | 'allFavorites' | 'favorite';
+type LotterySourceType = 'allFavorites' | 'favorite' | 'homeBanner' | 'homeNowPlaying' | 'nowPlaying';
 type LotteryBannerActionMode = 'addToFavorite' | 'removeFromFavorite' | 'readonly';
 
 type LotteryBannerProps = {
@@ -18,68 +31,221 @@ function getBannerImage(movie: MovieSummary | undefined) {
   return movie?.backdropUrl ?? movie?.posterUrl ?? '';
 }
 
+function getSourceLabel(sourceType: LotterySourceType) {
+  if (sourceType === 'homeBanner') {
+    return '本周热映';
+  }
+
+  if (sourceType === 'allFavorites') {
+    return '全部收藏夹';
+  }
+
+  if (sourceType === 'favorite') {
+    return '当前收藏夹';
+  }
+
+  return '正在热映';
+}
+
+function getMovieMeta(movie: MovieSummary | undefined) {
+  if (!movie) {
+    return '先添加电影，再随机挑一部。';
+  }
+
+  return `${movie.releaseYear ?? '未知年份'} / ${movie.voteAverage.toFixed(1)}`;
+}
+
 export function LotteryBanner({ actionMode, movies, sourceType, variant = 'hero' }: LotteryBannerProps) {
-  const candidates = useMemo(() => movies.filter((movie) => movie.backdropUrl || movie.posterUrl), [movies]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const navigate = useNavigate();
+  const shouldReduceMotion = useReducedMotion();
+  const candidates = useMemo(() => getUniqueLotteryMovies(movies), [movies]);
+  const visualQueue = useMemo(
+    () => buildLotteryVisualQueue(candidates, variant === 'compact' ? 6 : 8),
+    [candidates, variant]
+  );
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'center',
+    containScroll: false,
+    loop: visualQueue.length > 1,
+    skipSnaps: false
+  });
+  const isProgrammaticScrollRef = useRef(false);
+  const [activeMovieId, setActiveMovieId] = useState<number | null>(candidates[0]?.id ?? null);
+  const [isPaused, setIsPaused] = useState(false);
+  const activeIndex = candidates.findIndex((movie) => movie.id === activeMovieId);
+  const activeMovie = activeIndex >= 0 ? candidates[activeIndex] : candidates[0];
+  const imageUrl = getBannerImage(activeMovie);
+  const isFavoriteLottery = variant === 'compact';
+  const sourceLabel = getSourceLabel(sourceType);
 
   useEffect(() => {
-    if (activeIndex >= candidates.length) {
-      setActiveIndex(0);
+    if (candidates.length === 0) {
+      setActiveMovieId(null);
+      return;
     }
-  }, [activeIndex, candidates.length]);
+
+    if (!activeMovieId || !candidates.some((movie) => movie.id === activeMovieId)) {
+      setActiveMovieId(candidates[0].id);
+    }
+  }, [activeMovieId, candidates]);
 
   useEffect(() => {
-    if (candidates.length < 2) {
+    if (!emblaApi || !activeMovie) {
+      return;
+    }
+
+    const visualIndex = findVisualIndexByMovieId(visualQueue, activeMovie.id, emblaApi.selectedScrollSnap());
+
+    if (visualIndex >= 0) {
+      isProgrammaticScrollRef.current = true;
+      emblaApi.scrollTo(visualIndex);
+      window.setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 420);
+    }
+  }, [activeMovie, emblaApi, visualQueue]);
+
+  useEffect(() => {
+    if (!emblaApi) {
+      return undefined;
+    }
+
+    const syncActiveMovie = () => {
+      if (isProgrammaticScrollRef.current) {
+        return;
+      }
+
+      const selectedItem = visualQueue[emblaApi.selectedScrollSnap()];
+
+      if (selectedItem) {
+        setActiveMovieId(selectedItem.movie.id);
+      }
+    };
+
+    emblaApi.on('select', syncActiveMovie);
+    syncActiveMovie();
+
+    return () => {
+      emblaApi.off('select', syncActiveMovie);
+    };
+  }, [emblaApi, visualQueue]);
+
+  useEffect(() => {
+    if (candidates.length < 2 || isPaused) {
       return undefined;
     }
 
     const timer = window.setInterval(() => {
-      setActiveIndex((currentIndex) => (currentIndex + 1) % candidates.length);
+      setActiveMovieId((currentMovieId) => {
+        const currentIndex = candidates.findIndex((movie) => movie.id === currentMovieId);
+        const nextIndex = isFavoriteLottery
+          ? getNextLotteryIndex(currentIndex, candidates.length)
+          : getNextSequentialIndex(currentIndex, candidates.length);
+
+        return candidates[nextIndex]?.id ?? candidates[0].id;
+      });
     }, 5200);
 
     return () => window.clearInterval(timer);
-  }, [candidates.length]);
+  }, [candidates, isFavoriteLottery, isPaused]);
 
-  const activeMovie = candidates[activeIndex];
-  const imageUrl = getBannerImage(activeMovie);
-  const displayCandidates = candidates.length > 0 ? candidates : [];
+  const openMovieDetail = (movie: MovieSummary | undefined) => {
+    if (!movie) {
+      return;
+    }
+
+    navigate(`/movies/${movie.id}`);
+  };
 
   const handleChangeMovie = () => {
     if (candidates.length < 2) {
       return;
     }
 
-    setActiveIndex((currentIndex) => (currentIndex + 1) % candidates.length);
+    const nextIndex = getNextLotteryIndex(activeIndex, candidates.length);
+
+    setActiveMovieId(candidates[nextIndex]?.id ?? candidates[0].id);
+  };
+
+  const handleSelectMovie = (movie: MovieSummary) => {
+    setActiveMovieId(movie.id);
   };
 
   return (
     <section
-      className={[styles.banner, variant === 'compact' ? styles.compact : ''].filter(Boolean).join(' ')}
+      className={clsx(styles.banner, variant === 'compact' && styles.compact)}
       data-action-mode={actionMode}
       data-source-type={sourceType}
-      style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined}
+      onBlur={() => setIsPaused(false)}
+      onFocus={() => setIsPaused(true)}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
     >
+      <AnimatePresence initial={false}>
+        {imageUrl ? (
+          <motion.div
+            animate={{ opacity: 1, scale: 1 }}
+            className={styles.backdrop}
+            exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 1.03 }}
+            initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 1.03 }}
+            key={imageUrl}
+            style={{ backgroundImage: `url(${imageUrl})` }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.58, ease: 'easeOut' }}
+          />
+        ) : null}
+      </AnimatePresence>
       <div className={styles.overlay} />
-      {variant === 'compact' ? (
-        <div className={styles.resultPanel}>
-          <span>{sourceType === 'allFavorites' ? '全部收藏夹' : '当前收藏夹'}</span>
-          <strong>{activeMovie?.title ?? '暂无候选电影'}</strong>
-          <p>
-            {activeMovie
-              ? `${activeMovie.releaseYear ?? '未知年份'} / ${activeMovie.voteAverage.toFixed(1)}`
-              : '先添加电影，再随机挑一部。'}
-          </p>
-          <button disabled={candidates.length < 2} type="button" onClick={handleChangeMovie}>
-            换一换
+
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className={variant === 'compact' ? styles.resultPanel : styles.heroPanel}
+        initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : 16 }}
+        key={activeMovie?.id ?? 'empty'}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.32, ease: 'easeOut' }}
+      >
+        <span>{sourceLabel}</span>
+        <strong>{activeMovie?.title ?? '暂无候选电影'}</strong>
+        <p>{variant === 'compact' ? getMovieMeta(activeMovie) : activeMovie?.overview || getMovieMeta(activeMovie)}</p>
+        <div className={styles.panelActions}>
+          {isFavoriteLottery ? (
+            <button disabled={candidates.length < 2} type="button" onClick={handleChangeMovie}>
+              <Shuffle size={16} />
+              <span>换一换</span>
+            </button>
+          ) : null}
+          <button disabled={!activeMovie} type="button" onClick={() => openMovieDetail(activeMovie)}>
+            <ExternalLink size={16} />
+            <span>打开详情</span>
           </button>
         </div>
-      ) : null}
-      <div className={styles.track} aria-hidden="true">
-        {displayCandidates.slice(0, 8).map((movie) => (
-          <div className={styles.poster} key={movie.id}>
-            {movie.posterUrl ? <img alt="" decoding="async" loading="lazy" src={movie.posterUrl} /> : null}
+      </motion.div>
+
+      <div className={styles.track}>
+        <div className={styles.viewport} ref={emblaRef}>
+          <div className={styles.posterRail}>
+            {visualQueue.map((item) => (
+              <button
+                aria-label={`定位到 ${item.movie.title}`}
+                className={clsx(styles.poster, item.movie.id === activeMovie?.id && styles.posterActive)}
+                key={`${item.movie.id}-${item.visualIndex}`}
+                type="button"
+                onClick={() => handleSelectMovie(item.movie)}
+              >
+                <motion.span
+                  className={styles.posterInner}
+                  whileHover={shouldReduceMotion ? undefined : { y: -6 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+                >
+                  {item.movie.posterUrl ? (
+                    <img alt="" decoding="async" loading="lazy" src={item.movie.posterUrl} />
+                  ) : (
+                    <span>{item.movie.title}</span>
+                  )}
+                </motion.span>
+              </button>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </section>
   );

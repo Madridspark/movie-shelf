@@ -28,4 +28,22 @@ class MockIntersectionObserver implements IntersectionObserver {
   unobserve = vi.fn();
 }
 
+class MockResizeObserver implements ResizeObserver {
+  disconnect = vi.fn();
+  observe = vi.fn();
+  unobserve = vi.fn();
+}
+
 vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+vi.stubGlobal('ResizeObserver', MockResizeObserver);
+
+vi.stubGlobal('matchMedia', (query: string) => ({
+  addEventListener: vi.fn(),
+  addListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+  matches: false,
+  media: query,
+  onchange: null,
+  removeEventListener: vi.fn(),
+  removeListener: vi.fn()
+}));

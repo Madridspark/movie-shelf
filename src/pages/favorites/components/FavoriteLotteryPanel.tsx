@@ -29,7 +29,7 @@ export function FavoriteLotteryPanel({
         />
       </div>
       <LotteryBanner
-        actionMode={lotterySource === 'allFavorites' ? 'readonly' : 'removeFromFavorite'}
+        actionMode="readonly"
         movies={lotteryMovies.map((item) => item.movie)}
         sourceType={lotterySource}
         variant="compact"
