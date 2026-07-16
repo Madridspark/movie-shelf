@@ -1,0 +1,26 @@
+@import '@styles/variables.less';
+
+.loadingPage {
+  display: grid;
+  min-height: 100vh;
+  align-content: center;
+  justify-items: center;
+  padding: 32px;
+  background:
+    radial-gradient(circle at 50% 42%, fade(@gold, 12%), transparent 34%),
+    @page-bg;
+  color: @text-main;
+  gap: 18px;
+}
+
+.loadingLogo {
+  width: min(284px, 72vw);
+  height: auto;
+}
+
+.loadingText {
+  margin: 0;
+  color: @text-muted;
+  font-size: 15px;
+  font-weight: 800;
+}

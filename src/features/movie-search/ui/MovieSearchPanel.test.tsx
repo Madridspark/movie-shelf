@@ -22,8 +22,8 @@ describe('MovieSearchPanel', () => {
   it('loads now playing movies on the home surface', async () => {
     renderMovieSearchPanel();
 
-    expect(screen.getAllByText('全面启动').length).toBeGreaterThan(0);
     expect(screen.queryByText('暂无候选电影')).not.toBeInTheDocument();
+    expect(await screen.findByText('MSW Banner')).toBeInTheDocument();
     expect(await screen.findByText('MSW Now Playing')).toBeInTheDocument();
     expect(await screen.findByText('Drama')).toBeInTheDocument();
   });
