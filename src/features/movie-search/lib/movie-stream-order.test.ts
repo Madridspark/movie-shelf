@@ -62,6 +62,14 @@ describe('movie stream order', () => {
     expect(nextState.moviePool.map((movie) => movie.id)).toEqual([1, 2, 3]);
   });
 
+  it('keeps every incoming movie when no stream limit is provided', () => {
+    const streamState = initializeMovieStream(movies.slice(0, 2), 'relevance', false);
+    const nextState = appendMovieStream(streamState, movies);
+
+    expect(nextState.displayMovies.map((movie) => movie.id)).toEqual([1, 2, 3]);
+    expect(nextState.moviePool.map((movie) => movie.id)).toEqual([1, 2, 3]);
+  });
+
   it('re-sorts the whole loaded pool when the user changes sort mode', () => {
     const streamState = appendMovieStream(
       initializeMovieStream(movies.slice(0, 2), 'rating', true, 100),

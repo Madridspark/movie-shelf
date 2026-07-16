@@ -19,7 +19,7 @@ type MovieStreamSectionProps = {
   loadMoreRef: (element: HTMLDivElement | null) => void;
   movies: MovieSummary[];
   reachedStreamLimit: boolean;
-  streamLimit: number;
+  streamLimit?: number;
   onRefetch: () => void;
   onToggleFavorite: (movie: MovieSummary) => void;
 };
@@ -45,7 +45,7 @@ export function MovieStreamSection({
         <span>{isSearching ? '搜索结果' : '最新上映'}</span>
         <span>
           {movies.length > 0
-            ? `${movies.length}${movies.length >= streamLimit ? ' / 已达上限' : ' 部'}`
+            ? `${movies.length}${streamLimit && movies.length >= streamLimit ? ' / 已达上限' : ' 部'}`
             : ''}
         </span>
       </div>

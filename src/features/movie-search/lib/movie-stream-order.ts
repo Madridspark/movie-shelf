@@ -12,9 +12,9 @@ export function initializeMovieStream(
   movies: MovieSummary[],
   sortMode: MovieSearchSortMode,
   shouldSort: boolean,
-  limit: number
+  limit?: number
 ): MovieStreamState {
-  const moviePool = movies.slice(0, limit);
+  const moviePool = typeof limit === 'number' ? movies.slice(0, limit) : movies;
 
   return {
     displayMovies: shouldSort ? sortSearchMovies(moviePool, sortMode) : moviePool,
@@ -25,7 +25,7 @@ export function initializeMovieStream(
 export function appendMovieStream(
   currentState: MovieStreamState,
   incomingMovies: MovieSummary[],
-  limit: number
+  limit?: number
 ): MovieStreamState {
   const existingMovieIds = new Set(currentState.moviePool.map((movie) => movie.id));
   const appendedMovies = incomingMovies.filter((movie) => !existingMovieIds.has(movie.id));
@@ -34,9 +34,12 @@ export function appendMovieStream(
     return currentState;
   }
 
+  const nextDisplayMovies = [...currentState.displayMovies, ...appendedMovies];
+  const nextMoviePool = [...currentState.moviePool, ...appendedMovies];
+
   return {
-    displayMovies: [...currentState.displayMovies, ...appendedMovies].slice(0, limit),
-    moviePool: [...currentState.moviePool, ...appendedMovies].slice(0, limit)
+    displayMovies: typeof limit === 'number' ? nextDisplayMovies.slice(0, limit) : nextDisplayMovies,
+    moviePool: typeof limit === 'number' ? nextMoviePool.slice(0, limit) : nextMoviePool
   };
 }
 
