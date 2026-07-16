@@ -18,6 +18,7 @@ FROM nginx:1.27-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/public/assets/brand /usr/share/nginx/html/assets/brand
 COPY --from=builder /app/public/favicon.png /usr/share/nginx/html/favicon.png
 COPY --from=builder /app/public/apple-touch-icon.png /usr/share/nginx/html/apple-touch-icon.png
 

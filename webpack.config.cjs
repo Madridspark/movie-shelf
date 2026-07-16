@@ -1,3 +1,4 @@
+const fs = require('node:fs');
 const path = require('node:path');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -6,6 +7,21 @@ const webpack = require('webpack');
 
 const rootDir = __dirname;
 const resolveSrc = (dir) => path.resolve(rootDir, 'src', dir);
+const localEnvPath = path.resolve(rootDir, '.env');
+const localEnv = fs.existsSync(localEnvPath)
+  ? Object.fromEntries(
+      fs
+        .readFileSync(localEnvPath, 'utf8')
+        .split(/\r?\n/)
+        .filter((line) => line && !line.startsWith('#') && line.includes('='))
+        .map((line) => {
+          const separatorIndex = line.indexOf('=');
+
+          return [line.slice(0, separatorIndex), line.slice(separatorIndex + 1)];
+        })
+    )
+  : {};
+const getEnv = (key, fallback = '') => process.env[key] ?? localEnv[key] ?? fallback;
 
 module.exports = {
   entry: path.resolve(rootDir, 'src/main.tsx'),
@@ -73,10 +89,8 @@ module.exports = {
       template: path.resolve(rootDir, 'public/index.html')
     }),
     new webpack.DefinePlugin({
-      'import.meta.env': JSON.stringify({
-        VITE_TMDB_ACCESS_TOKEN: process.env.VITE_TMDB_ACCESS_TOKEN ?? '',
-        VITE_TMDB_BASE_URL: process.env.VITE_TMDB_BASE_URL ?? 'https://api.themoviedb.org/3'
-      })
+      __TMDB_ACCESS_TOKEN__: JSON.stringify(getEnv('VITE_TMDB_ACCESS_TOKEN')),
+      __TMDB_BASE_URL__: JSON.stringify(getEnv('VITE_TMDB_BASE_URL', 'https://api.themoviedb.org/3'))
     }),
     new MiniCssExtractPlugin({
       filename: 'assets/[name].[contenthash:8].css',
