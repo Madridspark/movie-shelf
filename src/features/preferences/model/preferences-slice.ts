@@ -17,9 +17,9 @@ export type MovieSearchSortMode =
 
 const initialState: PreferencesState = {
   includeAdult: false,
-  language: 'zh-CN',
+  language: 'zh-TW',
   movieSearchSortMode: 'relevance',
-  region: 'CN'
+  region: ''
 };
 
 const preferencesSlice = createSlice({

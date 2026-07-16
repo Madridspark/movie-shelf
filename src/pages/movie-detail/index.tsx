@@ -15,6 +15,7 @@ import { useAppDispatch, useAppSelector } from '@store/hooks';
 
 import { CastList } from './components/CastList';
 import { FavoriteMenu } from './components/FavoriteMenu';
+import { MovieDetailSkeleton } from './components/MovieDetailSkeleton';
 import { MovieHero } from './components/MovieHero';
 import { MovieMetaPanel } from './components/MovieMetaPanel';
 import { RelatedMovieRail } from './components/RelatedMovieRail';
@@ -114,7 +115,7 @@ export function MovieDetailPage() {
   };
 
   if (isFetching && !movie) {
-    return <div className={styles.statePage}>正在加载电影详情...</div>;
+    return <MovieDetailSkeleton />;
   }
 
   if (isError || !movie) {

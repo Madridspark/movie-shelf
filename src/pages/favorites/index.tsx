@@ -32,6 +32,7 @@ import { FavoriteLotteryPanel } from './components/FavoriteLotteryPanel';
 import { FavoriteMovieGrid } from './components/FavoriteMovieGrid';
 import { FavoriteSidebar } from './components/FavoriteSidebar';
 import { FavoriteStorageNotice } from './components/FavoriteStorageNotice';
+import { FavoritesPageSkeleton } from './components/FavoritesPageSkeleton';
 import styles from './index.module.less';
 
 const FAVORITE_SORT_OPTIONS: DropdownSelectOption<FavoriteSortMode>[] = [
@@ -55,6 +56,7 @@ export function FavoritesPage() {
   const allMovies = useAppSelector(selectAllFavoriteMovies);
   const sortMode = useAppSelector(selectFavoriteSortMode);
   const lotterySource = useAppSelector(selectFavoriteLotterySource);
+  const [isPageReady, setIsPageReady] = useState(false);
   const [storageNotice, setStorageNotice] = useState(() => getFavoritesStorageNotice());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
@@ -77,6 +79,10 @@ export function FavoritesPage() {
   useEffect(() => {
     setRenameValue(activeCollection?.name ?? '');
   }, [activeCollection?.name]);
+
+  useEffect(() => {
+    setIsPageReady(true);
+  }, []);
 
   const handleCreateCollection = () => {
     dispatch(createFavoriteCollection(newCollectionName));
@@ -107,6 +113,10 @@ export function FavoritesPage() {
     dispatch(setActiveCollection(collectionId));
     setRenameValue(nextCollection?.name ?? '');
   };
+
+  if (!isPageReady) {
+    return <FavoritesPageSkeleton />;
+  }
 
   return (
     <section className={styles.page}>

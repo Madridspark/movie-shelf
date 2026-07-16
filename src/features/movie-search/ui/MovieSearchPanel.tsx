@@ -17,7 +17,11 @@ import {
 } from '@features/favorites/model/favorites-slice';
 import { selectFavoriteCollections } from '@features/favorites/model/favorites-selectors';
 import { LotteryBanner } from '@features/lottery-banner/ui/LotteryBanner';
-import { sortSearchMovies } from '@features/movie-search/lib/movie-sort-strategies';
+import {
+  appendMovieStream,
+  initializeMovieStream,
+  sortMovieStream
+} from '@features/movie-search/lib/movie-stream-order';
 import {
   MovieSearchSortMode,
   setMovieSearchSortMode
@@ -56,11 +60,15 @@ export function MovieSearchPanel() {
   const collections = useAppSelector(selectFavoriteCollections);
   const searchSortMode = useAppSelector((state) => state.preferences.movieSearchSortMode);
   const [keyword, setKeyword] = useState('');
+  const [displayMovies, setDisplayMovies] = useState<MovieSummary[]>([]);
   const searchKeyword = keyword.trim();
   const debouncedSearchKeyword = useDebouncedValue(searchKeyword);
   const isSearching = searchKeyword.length > 0;
   const isSearchSettling = isSearching && searchKeyword !== debouncedSearchKeyword;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const moviePoolRef = useRef<MovieSummary[]>([]);
+  const streamKeyRef = useRef('');
+  const sortModeRef = useRef(searchSortMode);
 
   const bannerQuery = useHomeBannerMoviesQuery();
   const nowPlayingQuery = useNowPlayingMoviesQuery();
@@ -71,11 +79,6 @@ export function MovieSearchPanel() {
 
     return flattenVisibleMovies(pages);
   }, [isSearching, nowPlayingQuery.data?.pages, searchQuery.data?.pages]);
-
-  const displayMovies = useMemo(
-    () => (isSearching ? sortSearchMovies(rawDisplayMovies, searchSortMode) : rawDisplayMovies),
-    [isSearching, rawDisplayMovies, searchSortMode]
-  );
 
   const fetchNextPage = isSearching ? searchQuery.fetchNextPage : nowPlayingQuery.fetchNextPage;
   const hasNextPage = isSearching ? searchQuery.hasNextPage : nowPlayingQuery.hasNextPage;
@@ -95,6 +98,7 @@ export function MovieSearchPanel() {
     () => new Set(defaultCollection?.movieIds ?? []),
     [defaultCollection?.movieIds]
   );
+  const streamKey = isSearching ? `search:${debouncedSearchKeyword}` : 'home';
 
   const handleSortModeChange = (nextSortMode: MovieSearchSortMode) => {
     dispatch(setMovieSearchSortMode(nextSortMode));
@@ -107,6 +111,51 @@ export function MovieSearchPanel() {
         : addMovieToCollection({ collectionId: DEFAULT_COLLECTION_ID, movie })
     );
   };
+
+  useEffect(() => {
+    const isNewStream = streamKeyRef.current !== streamKey;
+
+    if (isNewStream) {
+      const nextStreamState = initializeMovieStream(
+        rawDisplayMovies,
+        searchSortMode,
+        isSearching,
+        MOVIE_STREAM_LIMIT
+      );
+
+      streamKeyRef.current = streamKey;
+      moviePoolRef.current = nextStreamState.moviePool;
+      setDisplayMovies(nextStreamState.displayMovies);
+      return;
+    }
+
+    const currentStreamState = {
+      displayMovies,
+      moviePool: moviePoolRef.current
+    };
+    const nextStreamState = appendMovieStream(currentStreamState, rawDisplayMovies, MOVIE_STREAM_LIMIT);
+
+    if (nextStreamState === currentStreamState) {
+      return;
+    }
+
+    moviePoolRef.current = nextStreamState.moviePool;
+    setDisplayMovies(nextStreamState.displayMovies);
+  }, [displayMovies, isSearching, rawDisplayMovies, searchSortMode, streamKey]);
+
+  useEffect(() => {
+    if (sortModeRef.current === searchSortMode) {
+      return;
+    }
+
+    sortModeRef.current = searchSortMode;
+
+    if (!isSearching) {
+      return;
+    }
+
+    setDisplayMovies(sortMovieStream(moviePoolRef.current, searchSortMode));
+  }, [isSearching, searchSortMode]);
 
   useEffect(() => {
     if (isSearching) {
