@@ -6,11 +6,11 @@ import { movieService } from './movie-service';
 
 export const HOME_BANNER_MOVIES_QUERY_KEY = ['movies', 'home-banner', 'trending-week'] as const;
 
-export function useMovieSearchQuery(query: string) {
+export function useMovieSearchQuery(query: string, enabled = true) {
   return useInfiniteQuery({
     queryKey: ['movies', 'search', query],
     queryFn: ({ pageParam }) => movieService.searchMovies(query, Number(pageParam)),
-    enabled: query.trim().length > 0,
+    enabled: enabled && query.trim().length > 0,
     getNextPageParam: (lastPage) => {
       const nextPage = lastPage.page + 1;
 
@@ -20,10 +20,11 @@ export function useMovieSearchQuery(query: string) {
   });
 }
 
-export function useNowPlayingMoviesQuery() {
+export function useNowPlayingMoviesQuery(enabled = true) {
   return useInfiniteQuery({
     queryKey: ['movies', 'now-playing'],
     queryFn: ({ pageParam }) => movieService.getNowPlayingMovies(Number(pageParam)),
+    enabled,
     getNextPageParam: (lastPage) => {
       const nextPage = lastPage.page + 1;
 
@@ -33,8 +34,11 @@ export function useNowPlayingMoviesQuery() {
   });
 }
 
-export function useHomeBannerMoviesQuery() {
-  return useQuery(homeBannerMoviesQueryOptions());
+export function useHomeBannerMoviesQuery(enabled = true) {
+  return useQuery({
+    ...homeBannerMoviesQueryOptions(),
+    enabled
+  });
 }
 
 export function homeBannerMoviesQueryOptions() {

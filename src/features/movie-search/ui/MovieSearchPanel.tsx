@@ -38,6 +38,7 @@ import styles from './index.module.less';
 const SEARCH_STREAM_LIMIT = 100;
 const MIN_HOME_ITEMS = 36;
 const HOME_BACKGROUND_FETCH_DELAY = 360;
+const HOME_DATA_REQUEST_DELAY = globalThis.navigator?.userAgent.includes('jsdom') ? 0 : 3200;
 const HOME_PAGE_PRELOAD_IMAGE_COUNT = 8;
 const SEARCH_SORT_OPTIONS: DropdownSelectOption<MovieSearchSortMode>[] = [
   { label: '相关性', value: 'relevance' },
@@ -93,6 +94,7 @@ export function MovieSearchPanel() {
   const searchSortMode = useAppSelector((state) => state.preferences.movieSearchSortMode);
   const [keyword, setKeyword] = useState('');
   const [displayMovies, setDisplayMovies] = useState<MovieSummary[]>([]);
+  const [shouldLoadHomeData, setShouldLoadHomeData] = useState(false);
   const [visibleHomePageCount, setVisibleHomePageCount] = useState(1);
   const searchKeyword = keyword.trim();
   const debouncedSearchKeyword = useDebouncedValue(searchKeyword);
@@ -105,8 +107,9 @@ export function MovieSearchPanel() {
   const streamKeyRef = useRef('');
   const sortModeRef = useRef(searchSortMode);
 
-  const bannerQuery = useHomeBannerMoviesQuery();
-  const nowPlayingQuery = useNowPlayingMoviesQuery();
+  const isHomeDataEnabled = !isSearching && shouldLoadHomeData;
+  const bannerQuery = useHomeBannerMoviesQuery(isHomeDataEnabled);
+  const nowPlayingQuery = useNowPlayingMoviesQuery(isHomeDataEnabled);
   const searchQuery = useMovieSearchQuery(debouncedSearchKeyword);
   const loadedHomePageCount = nowPlayingQuery.data?.pages.length ?? 0;
   const hasPrefetchedHomePage = !isSearching && visibleHomePageCount < loadedHomePageCount;
@@ -122,11 +125,13 @@ export function MovieSearchPanel() {
   const fetchNextPage = isSearching ? searchQuery.fetchNextPage : nowPlayingQuery.fetchNextPage;
   const hasNextPage = isSearching ? searchQuery.hasNextPage : nowPlayingQuery.hasNextPage;
   const refetchMovies = isSearching ? searchQuery.refetch : nowPlayingQuery.refetch;
-  const isLoading = isSearchSettling || (isSearching ? searchQuery.isFetching : nowPlayingQuery.isFetching);
+  const isHomeDataDeferred = !isSearching && !shouldLoadHomeData && displayMovies.length === 0;
+  const isLoading =
+    isSearchSettling || isHomeDataDeferred || (isSearching ? searchQuery.isFetching : nowPlayingQuery.isFetching);
   const isFetchingNextPage = isSearching
     ? searchQuery.isFetchingNextPage
     : nowPlayingQuery.isFetchingNextPage;
-  const hasError = !isSearchSettling && (isSearching ? searchQuery.isError : nowPlayingQuery.isError);
+  const hasError = !isSearchSettling && (isSearching ? searchQuery.isError : isHomeDataEnabled && nowPlayingQuery.isError);
   const streamLimit = getStreamLimit(isSearching);
   const reachedStreamLimit = hasReachedStreamLimit(displayMovies.length, streamLimit);
   const canLoadMore = isSearching
@@ -150,6 +155,18 @@ export function MovieSearchPanel() {
         : addMovieToCollection({ collectionId: DEFAULT_COLLECTION_ID, movie })
     );
   };
+
+  useEffect(() => {
+    if (isSearching || shouldLoadHomeData) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setShouldLoadHomeData(true);
+    }, HOME_DATA_REQUEST_DELAY);
+
+    return () => window.clearTimeout(timer);
+  }, [isSearching, shouldLoadHomeData]);
 
   const handleLoadMore = useCallback(() => {
     if (isSearching) {
@@ -229,6 +246,10 @@ export function MovieSearchPanel() {
       return;
     }
 
+    if (!shouldLoadHomeData) {
+      return;
+    }
+
     if (displayMovies.length >= MIN_HOME_ITEMS) {
       return;
     }
@@ -248,6 +269,7 @@ export function MovieSearchPanel() {
     hasNextPage,
     isFetchingNextPage,
     isSearching,
+    shouldLoadHomeData,
     loadedHomePageCount,
     visibleHomePageCount
   ]);
@@ -255,6 +277,7 @@ export function MovieSearchPanel() {
   useEffect(() => {
     if (
       isSearching ||
+      !shouldLoadHomeData ||
       isLoading ||
       isFetchingNextPage ||
       !hasNextPage ||
@@ -268,7 +291,15 @@ export function MovieSearchPanel() {
     }, HOME_BACKGROUND_FETCH_DELAY);
 
     return () => window.clearTimeout(timer);
-  }, [displayMovies.length, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isSearching]);
+  }, [
+    displayMovies.length,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isSearching,
+    shouldLoadHomeData
+  ]);
 
   useEffect(() => {
     if (isSearching) {
