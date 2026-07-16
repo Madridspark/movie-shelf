@@ -1,0 +1,162 @@
+@import '@styles/variables.less';
+
+.banner {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: clamp(420px, 66vh, 760px);
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, #20130d 0%, #080705 58%),
+    radial-gradient(circle at 78% 28%, fade(@gold, 22%), transparent 30rem);
+  background-position: center;
+  background-size: cover;
+}
+
+.compact {
+  align-items: stretch;
+  min-height: 208px;
+  border-radius: 0 0 8px 8px;
+  background-position: center 32%;
+
+  .overlay {
+    background:
+      linear-gradient(90deg, rgba(8, 7, 5, 0.92) 0%, rgba(8, 7, 5, 0.68) 48%, rgba(8, 7, 5, 0.26) 100%),
+      linear-gradient(180deg, rgba(8, 7, 5, 0.18) 0%, rgba(8, 7, 5, 0.88) 100%);
+  }
+
+  .track {
+    top: 28px;
+    right: 26px;
+    bottom: auto;
+    grid-auto-columns: 72px;
+    max-width: min(42vw, 360px);
+  }
+
+  .poster {
+    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.34);
+  }
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 7, 5, 0.5) 0%, rgba(8, 7, 5, 0.18) 38%, @page-bg 100%),
+    linear-gradient(90deg, rgba(8, 7, 5, 0.88) 0%, rgba(8, 7, 5, 0.24) 56%, rgba(8, 7, 5, 0.68) 100%);
+}
+
+.track {
+  position: absolute;
+  right: clamp(20px, 6vw, 90px);
+  bottom: clamp(44px, 8vw, 92px);
+  z-index: 2;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(76px, 9vw, 126px);
+  gap: 12px;
+  max-width: min(54vw, 680px);
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000000 12%, #000000 86%, transparent);
+}
+
+.poster {
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  border: 1px solid fade(#ffffff, 20%);
+  border-radius: 8px;
+  background: @surface;
+  box-shadow: 0 20px 36px rgba(0, 0, 0, 0.38);
+  transform: translateZ(0);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.resultPanel {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  width: min(48%, 420px);
+  min-width: 280px;
+  padding: 28px;
+
+  span {
+    color: @gold;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  strong {
+    overflow: hidden;
+    color: @text-main;
+    font-size: clamp(24px, 3vw, 38px);
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p {
+    margin: 0;
+    color: @text-muted;
+  }
+
+  button {
+    width: fit-content;
+    min-height: 36px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0 14px;
+    background: linear-gradient(135deg, @accent, @gold);
+    color: #1c1208;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 900;
+
+    &:disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.4);
+      opacity: 0.52;
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .banner {
+    min-height: 430px;
+  }
+
+  .compact {
+    min-height: 220px;
+
+    .track {
+      top: 78px;
+      right: 14px;
+      grid-auto-columns: 54px;
+      max-width: 42vw;
+    }
+  }
+
+  .track {
+    right: 14px;
+    bottom: 42px;
+    grid-auto-columns: 64px;
+    max-width: 46vw;
+  }
+
+  .resultPanel {
+    width: 68%;
+    min-width: 0;
+    padding: 18px;
+
+    strong {
+      white-space: normal;
+    }
+  }
+}

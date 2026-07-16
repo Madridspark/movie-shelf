@@ -1,0 +1,46 @@
+@import '@styles/variables.less';
+
+.option {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  border: 1px solid @border-subtle;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: fade(@surface, 72%);
+  color: @text-main;
+  cursor: pointer;
+
+  em {
+    color: @text-muted;
+    font-style: normal;
+  }
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid @border-strong;
+  border-radius: 5px;
+  background: @surface-strong;
+  color: #1c1208;
+
+  &[data-state='checked'] {
+    border-color: @gold;
+    background: @gold;
+  }
+
+  &:focus-visible {
+    outline: 3px solid fade(@gold, 22%);
+    outline-offset: 2px;
+  }
+}
+
+.indicator {
+  display: inline-flex;
+}

@@ -1,0 +1,326 @@
+@import '@styles/variables.less';
+
+.page {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  min-height: 100vh;
+  background: @page-bg;
+  color: @text-main;
+}
+
+.topActions {
+  position: fixed;
+  top: 28px;
+  right: clamp(18px, 4vw, 56px);
+  z-index: 30;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid fade(#ffffff, 20%);
+    border-radius: 50%;
+    background: fade(@page-bg, 58%);
+    color: @text-main;
+    text-decoration: none;
+    backdrop-filter: blur(18px);
+  }
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  height: 100vh;
+  border-right: 1px solid @border-subtle;
+  padding: 28px 24px;
+  background: fade(@surface, 84%);
+  backdrop-filter: blur(18px);
+
+  h1 {
+    margin: 20px 0 0;
+    font-size: 28px;
+  }
+}
+
+.logo {
+  width: 214px;
+
+  img {
+    width: 100%;
+  }
+}
+
+.collectionList {
+  display: grid;
+  gap: 10px;
+}
+
+.collectionList button,
+.createBox button,
+.headerActions button,
+.dialogFooter button {
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, @accent, @gold);
+  color: #1c1208;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.collectionList button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  border: 1px solid @border-subtle;
+  padding: 10px 14px;
+  background: @surface-strong;
+  color: @text-main;
+
+  span {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+    text-align: left;
+  }
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 14px;
+  }
+
+  small {
+    color: @text-muted;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  em {
+    flex: 0 0 auto;
+    color: @text-muted;
+    font-style: normal;
+  }
+}
+
+.collectionList .activeCollection {
+  border-color: fade(@gold, 46%);
+  background: linear-gradient(135deg, fade(@accent, 44%), fade(@gold, 22%));
+}
+
+.createBox {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+  }
+}
+
+.mobileCollectionSelect {
+  display: none;
+}
+
+.main {
+  display: grid;
+  gap: 22px;
+  width: min(100%, 1120px);
+  padding: 42px clamp(24px, 4vw, 56px) 72px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid @border-subtle;
+  border-radius: 8px;
+  padding: 18px;
+  background: fade(@surface, 82%);
+
+  input {
+    width: min(520px, 100%);
+    border: 0;
+    background: transparent;
+    color: @text-main;
+    font-size: 30px;
+    font-weight: 900;
+    outline: 0;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: @text-muted;
+  }
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  button {
+    min-height: 40px;
+    border-radius: 8px;
+    padding: 0 12px;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+  }
+}
+
+.lotteryWrap {
+  overflow: hidden;
+  border: 1px solid @border-subtle;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, fade(@surface-strong, 96%), fade(@surface, 94%)),
+    radial-gradient(circle at 80% 12%, fade(@gold, 18%), transparent 24rem);
+}
+
+.lotteryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  z-index: 4;
+  padding: 16px 18px;
+
+  span {
+    color: @text-muted;
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  div {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.dialogContent {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 51;
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid @border-subtle;
+  border-radius: 8px;
+  padding: 22px;
+  background: fade(@surface-strong, 98%);
+  color: @text-main;
+  box-shadow: @shadow-md;
+  transform: translate(-50%, -50%);
+}
+
+.dialogTitle {
+  margin: 0;
+  font-size: 20px;
+}
+
+.dialogDescription {
+  margin: 12px 0 0;
+  color: @text-muted;
+  line-height: 1.7;
+}
+
+.dialogInput {
+  width: 100%;
+  border: 1px solid @border-subtle;
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background: @surface;
+  color: @text-main;
+  outline: 0;
+}
+
+.dialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+
+  button:first-child {
+    border: 1px solid @border-subtle;
+    background: @surface;
+    color: @text-main;
+  }
+}
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid @border-subtle;
+  }
+
+  .collectionList {
+    display: none;
+  }
+
+  .mobileCollectionSelect {
+    display: block;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .main {
+    padding: 24px 14px 56px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+
+    input {
+      font-size: 24px;
+    }
+  }
+
+  .lotteryHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+}

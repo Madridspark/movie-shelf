@@ -1,0 +1,60 @@
+@import '@styles/variables.less';
+
+.empty,
+.error {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  border-radius: 8px;
+  padding: 32px;
+  color: @text-muted;
+  text-align: center;
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    color: @text-main;
+    font-size: 20px;
+  }
+
+  p {
+    margin-top: 8px;
+  }
+}
+
+.empty {
+  border: 1px dashed @border-subtle;
+}
+
+.error {
+  min-height: auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  place-items: center start;
+  border: 1px solid @border-subtle;
+  padding: 16px 18px;
+  background: fade(@surface, 82%);
+  text-align: left;
+
+  h2 {
+    font-size: 15px;
+  }
+
+  p {
+    font-size: 13px;
+  }
+}
+
+.action {
+  display: inline-flex;
+}
+
+@media (max-width: 720px) {
+  .error {
+    grid-template-columns: 1fr;
+  }
+}
