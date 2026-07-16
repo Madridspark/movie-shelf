@@ -11,6 +11,7 @@ import {
   removeMovieFromCollection
 } from '@features/favorites/model/favorites-slice';
 import { selectFavoriteCollections } from '@features/favorites/model/favorites-selectors';
+import { NetworkErrorDialog } from '@shared/ui/network-error-dialog';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 
 import { CastList } from './components/CastList';
@@ -32,7 +33,7 @@ export function MovieDetailPage() {
   const [expandedReviewIds, setExpandedReviewIds] = useState<string[]>([]);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
-  const { data: movie, isError, isFetching } = useMovieDetailQuery(movieId);
+  const { data: movie, isError, isFetching, refetch } = useMovieDetailQuery(movieId);
   const primaryTrailer = movie?.trailers[0];
   const streamProviders = movie?.watchProviders?.flatrate ?? [];
   const rentProviders = movie?.watchProviders?.rent ?? [];
@@ -122,7 +123,7 @@ export function MovieDetailPage() {
     return (
       <div className={styles.statePage}>
         <Link to="/">返回首页</Link>
-        <p>暂时无法加载电影详情。</p>
+        <NetworkErrorDialog open onRetry={() => void refetch()} />
       </div>
     );
   }

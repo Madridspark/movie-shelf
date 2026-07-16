@@ -1,0 +1,69 @@
+@import '@styles/variables.less';
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(8, 7, 5, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 91;
+  display: grid;
+  width: min(420px, calc(100% - 40px));
+  border: 1px solid fade(#ffffff, 16%);
+  border-radius: 8px;
+  padding: 24px;
+  background: fade(@surface-strong, 96%);
+  color: @text-main;
+  box-shadow: @shadow-md;
+  gap: 12px;
+  transform: translate(-50%, -50%);
+}
+
+.title,
+.description {
+  margin: 0;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.description {
+  color: @text-muted;
+  line-height: 1.6;
+}
+
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 18px;
+  background: linear-gradient(135deg, @accent, @gold);
+  color: #1c1208;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .content {
+    width: calc(100% - 36px);
+    padding: 22px;
+  }
+
+  .retryButton {
+    width: 100%;
+  }
+}

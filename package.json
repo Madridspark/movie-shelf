@@ -11,7 +11,10 @@
     "test": "vitest",
     "build": "webpack --mode production",
     "build:vite": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "serve:dist": "node scripts/serve-dist.mjs",
+    "smoke": "node scripts/smoke.mjs --base-url http://127.0.0.1:4173",
+    "smoke:prod": "node scripts/smoke.mjs --base-url https://movie.zhangpengbo.com"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.2.3",

@@ -35,6 +35,15 @@ export default tseslint.config(
     }
   },
   {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        fetch: 'readonly'
+      }
+    }
+  },
+  {
     files: ['src/shared/ui/dialog/index.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off'

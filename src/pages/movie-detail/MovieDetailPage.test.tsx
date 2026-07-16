@@ -68,4 +68,12 @@ describe('MovieDetailPage', () => {
     expect(await screen.findByText('当前地区暂无观看平台信息。')).toBeInTheDocument();
     expect(await screen.findByText('导演：未知')).toBeInTheDocument();
   });
+
+  it('uses the shared network dialog when detail loading fails', async () => {
+    server.use(http.get(`${tmdbBaseUrl}/movie/:movieId`, () => HttpResponse.json({}, { status: 500 })));
+    renderMovieDetailPage('500');
+
+    expect(await screen.findByRole('dialog', { name: '网络连接断开' }, { timeout: 4000 })).toBeInTheDocument();
+    expect(screen.getByText('请检查网络连接后重试。')).toBeInTheDocument();
+  });
 });

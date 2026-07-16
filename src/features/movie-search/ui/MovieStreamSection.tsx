@@ -1,9 +1,9 @@
 import { MovieSummary } from '@entities/movie/model/types';
 import { MovieCard } from '@entities/movie/ui/movie-card';
 import { MovieWaterfallGrid } from '@entities/movie/ui/movie-waterfall-grid';
+import { NetworkErrorDialog } from '@shared/ui/network-error-dialog';
 import { StateResult } from '@shared/ui/state-result';
 
-import { NetworkErrorDialog } from './NetworkErrorDialog';
 import styles from './index.module.less';
 
 type MovieStreamSectionProps = {

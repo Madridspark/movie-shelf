@@ -76,7 +76,7 @@ export function MovieCard({
 
 export function MovieCardSkeleton() {
   return (
-    <div className={styles.skeleton}>
+    <div aria-label="电影卡片加载中" className={styles.skeleton}>
       <div />
     </div>
   );
