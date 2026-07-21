@@ -36,6 +36,7 @@ import { MovieStreamSection } from './MovieStreamSection';
 import styles from './index.module.less';
 
 const SEARCH_STREAM_LIMIT = 100;
+const HOME_STREAM_LIMIT = 200;
 const MIN_HOME_ITEMS = 36;
 const HOME_PREFETCH_MOVIE_LIMIT = 100;
 const HOME_PREFETCH_FETCH_DELAY = 360;
@@ -78,7 +79,7 @@ function preloadMovieImages(movies: MovieSummary[], imageCount = HOME_PAGE_PRELO
 }
 
 function getStreamLimit(isSearching: boolean) {
-  return isSearching ? SEARCH_STREAM_LIMIT : undefined;
+  return isSearching ? SEARCH_STREAM_LIMIT : HOME_STREAM_LIMIT;
 }
 
 function hasReachedStreamLimit(movieCount: number, streamLimit: number | undefined) {
