@@ -37,7 +37,8 @@ import styles from './index.module.less';
 
 const SEARCH_STREAM_LIMIT = 100;
 const MIN_HOME_ITEMS = 36;
-const HOME_BACKGROUND_FETCH_DELAY = 360;
+const HOME_PREFETCH_MOVIE_LIMIT = 100;
+const HOME_PREFETCH_FETCH_DELAY = 360;
 const HOME_PAGE_PRELOAD_IMAGE_COUNT = 8;
 const SEARCH_SORT_OPTIONS: DropdownSelectOption<MovieSearchSortMode>[] = [
   { label: '相关性', value: 'relevance' },
@@ -110,6 +111,10 @@ export function MovieSearchPanel() {
   const searchQuery = useMovieSearchQuery(debouncedSearchKeyword);
   const loadedHomePageCount = nowPlayingQuery.data?.pages.length ?? 0;
   const hasPrefetchedHomePage = !isSearching && visibleHomePageCount < loadedHomePageCount;
+  const loadedHomeMovies = useMemo(
+    () => flattenVisibleMovies(nowPlayingQuery.data?.pages),
+    [nowPlayingQuery.data?.pages]
+  );
 
   const rawDisplayMovies = useMemo(() => {
     const pages = isSearching
@@ -259,6 +264,7 @@ export function MovieSearchPanel() {
       isLoading ||
       isFetchingNextPage ||
       !hasNextPage ||
+      loadedHomeMovies.length >= HOME_PREFETCH_MOVIE_LIMIT ||
       displayMovies.length < MIN_HOME_ITEMS
     ) {
       return undefined;
@@ -266,7 +272,7 @@ export function MovieSearchPanel() {
 
     const timer = window.setTimeout(() => {
       void fetchNextPage();
-    }, HOME_BACKGROUND_FETCH_DELAY);
+    }, HOME_PREFETCH_FETCH_DELAY);
 
     return () => window.clearTimeout(timer);
   }, [
@@ -275,7 +281,8 @@ export function MovieSearchPanel() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    isSearching
+    isSearching,
+    loadedHomeMovies.length
   ]);
 
   useEffect(() => {

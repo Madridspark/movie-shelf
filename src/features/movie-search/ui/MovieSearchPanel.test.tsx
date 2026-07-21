@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -26,6 +26,51 @@ describe('MovieSearchPanel', () => {
     expect(await screen.findByText('MSW Banner')).toBeInTheDocument();
     expect(await screen.findByText('MSW Now Playing')).toBeInTheDocument();
     expect(await screen.findByText('Drama')).toBeInTheDocument();
+  });
+
+  it('prefetches the home movie pool to 100 items without continuously requesting later pages', async () => {
+    const requestedPages: number[] = [];
+
+    server.use(
+      http.get(`${tmdbBaseUrl}/movie/now_playing`, ({ request }) => {
+        const page = Number(new URL(request.url).searchParams.get('page') ?? 1);
+
+        requestedPages.push(page);
+
+        return HttpResponse.json({
+          page,
+          results: Array.from({ length: 20 }, (_, index) => {
+            const id = page * 1000 + index;
+
+            return {
+              backdrop_path: `/now-backdrop-${id}.jpg`,
+              genre_ids: [18],
+              id,
+              original_title: `MSW Now Playing ${id}`,
+              overview: 'A mocked now playing movie.',
+              poster_path: `/now-poster-${id}.jpg`,
+              release_date: '2026-07-01',
+              title: `MSW Now Playing ${id}`,
+              vote_average: 8.1,
+              vote_count: 120
+            };
+          }),
+          total_pages: 10,
+          total_results: 200
+        });
+      })
+    );
+    renderMovieSearchPanel();
+
+    expect(await screen.findByText('MSW Now Playing 1000')).toBeInTheDocument();
+
+    await waitFor(() => expect(requestedPages).toContain(5), { timeout: 4000 });
+
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 900);
+    });
+
+    expect(requestedPages).toEqual([1, 2, 3, 4, 5]);
   });
 
   it('switches to search state and renders search results', async () => {
